@@ -1,0 +1,41 @@
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.logs
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# Node
+node_modules/
+dist/
+npm-debug.log
+yarn-error.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+application-local.yml
+
+# Maven
+mvnw
+mvnw.cmd
+.mvn/
