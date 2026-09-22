@@ -63,6 +63,11 @@ springdoc:
       paths-to-match: /**
       packages-to-scan: com.campushub.modules
 
+# JWT配置
+jwt:
+  secret: campushub-secret-key-2026-very-long-and-secure-key
+  expire: 7200000  # 2小时，单位毫秒
+
 # 日志配置
 logging:
   level:
