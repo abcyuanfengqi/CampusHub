@@ -32,8 +32,11 @@ request.interceptors.response.use(
     }
   },
   error => {
-    ElMessage.error(error.message || '网络错误')
-    return Promise.reject(error)
+    // 提取后端返回的业务错误信息
+    const res = error.response?.data
+    const msg = res?.message || error.message || '网络错误'
+    ElMessage.error(msg)
+    return Promise.reject(new Error(msg))
   }
 )
 
