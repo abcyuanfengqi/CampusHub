@@ -9,7 +9,8 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Spring Security 配置
- * 当前阶段：放行所有请求（后续接入JWT过滤器后收紧权限）
+ * 认证与授权：JWT 拦截器（JwtAuthInterceptor）负责 Token 校验，
+ * 本配置负责白名单放行与无状态会话（ADR-005）
  */
 @Configuration
 @EnableWebSecurity
@@ -25,10 +26,10 @@ public class SecurityConfig {
             // 请求授权
             .authorizeHttpRequests(auth -> auth
                 // 放行认证与健康检查接口
-                .requestMatchers("/auth/**", "/system/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/system/**", "/auth/**", "/system/**").permitAll()
                 // 放行Swagger文档
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                // 其他请求暂时全部放行（JWT过滤器接入后改为 authenticated()）
+                // 其余接口由 JwtAuthInterceptor 校验（放行后拦截器统一鉴权，避免默认401页面）
                 .anyRequest().permitAll()
             );
         return http.build();

@@ -1,6 +1,7 @@
 package com.campushub.modules.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campushub.common.exception.BusinessException;
 import com.campushub.common.utils.JwtUtils;
 import com.campushub.modules.user.dto.LoginDTO;
@@ -78,8 +79,68 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserVO getCurrentUser() {
-        // 从Token中获取用户ID（简化实现，后续用拦截器）
-        return null;
+        Long userId = com.campushub.common.utils.UserContext.getUserId();
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        return convertToVO(user, null);
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        return user;
+    }
+
+    @Override
+    public UserVO updateProfile(User user) {
+        Long userId = com.campushub.common.utils.UserContext.getUserId();
+        User exist = userMapper.selectById(userId);
+        if (exist == null) {
+            throw new BusinessException("用户不存在");
+        }
+        user.setId(userId);
+        user.setPassword(null);          // 不允许通过此接口改密码
+        user.setUsername(null);          // 用户名不可改
+        user.setRole(null);
+        user.setStatus(null);
+        userMapper.updateById(user);
+        return convertToVO(userMapper.selectById(userId), null);
+    }
+
+    @Override
+    public Page<User> pageUsers(int page, int size, String keyword) {
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User> qw =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        if (org.springframework.util.StringUtils.hasText(keyword)) {
+            qw.like(User::getUsername, keyword).or().like(User::getNickname, keyword);
+        }
+        qw.orderByDesc(User::getCreateTime);
+        return userMapper.selectPage(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size), qw);
+    }
+
+    @Override
+    public void changeStatus(Long userId, Integer status) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        user.setStatus(status);
+        userMapper.updateById(user);
+    }
+
+    @Override
+    public void changeRole(Long userId, String role) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+        user.setRole(role);
+        userMapper.updateById(user);
     }
 
     private UserVO convertToVO(User user, String token) {

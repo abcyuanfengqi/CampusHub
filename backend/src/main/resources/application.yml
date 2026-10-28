@@ -46,9 +46,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
 # SpringDoc配置
 springdoc:
@@ -67,6 +64,10 @@ springdoc:
 jwt:
   secret: campushub-secret-key-2026-very-long-and-secure-key
   expire: 7200000  # 2小时，单位毫秒
+
+# 文件上传
+file:
+  upload-dir: ./uploads
 
 # 日志配置
 logging:
