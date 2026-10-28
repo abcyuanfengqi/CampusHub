@@ -1,47 +1,50 @@
 <template>
   <div>
+    <h2 class="page-title">竞赛组队</h2>
     <div class="toolbar">
       <el-input v-model="keyword" placeholder="搜索竞赛" clearable style="width: 220px" @keyup.enter="load" />
       <el-select v-model="level" placeholder="级别" clearable style="width: 140px">
-        <el-option v-for="l in levels" :key="l" :label="l" :value="l" />
+        <el-option v-for="l in levels" :key="l" :label="levelText(l)" :value="l" />
       </el-select>
       <el-button type="primary" @click="load">查询</el-button>
-      <el-button type="success" @click="showCreate = true">发布竞赛</el-button>
+      <el-button type="success" @click="showCreate = true" style="margin-left: auto">＋ 发布竞赛</el-button>
     </div>
 
-    <el-row :gutter="16">
+    <el-row :gutter="18">
       <el-col :span="8" v-for="c in list" :key="c.id">
-        <el-card shadow="hover" style="margin-bottom: 16px">
-          <template #header>
-            <div class="card-head">
-              <span>{{ c.name }}</span>
-              <el-tag size="small">{{ c.level }}</el-tag>
-            </div>
-          </template>
-          <p class="desc">{{ c.description }}</p>
-          <p class="meta">主办方：{{ c.organizer }} ｜ 状态：{{ c.status }}</p>
-          <p class="meta">报名截止：{{ c.registerDeadline }}</p>
-          <div class="actions">
-            <el-button size="small" type="primary" @click="showTeams(c)">队伍/加入</el-button>
+        <div class="comp-card hover-card">
+          <div class="comp-head">
+            <span class="comp-level" :style="{ background: levelBg(c.level) }">{{ levelText(c.level) }}</span>
+            <span class="comp-status">{{ c.status }}</span>
           </div>
-        </el-card>
+          <div class="comp-name">{{ c.name }}</div>
+          <div class="comp-desc">{{ c.description }}</div>
+          <div class="comp-meta">
+            <div class="meta-line"><span class="info-ic">🏫</span>{{ c.organizer }}</div>
+            <div class="meta-line"><span class="info-ic">⏰</span>报名截止 {{ c.registerDeadline }}</div>
+          </div>
+          <div class="comp-actions">
+            <el-button size="small" type="primary" round @click="showTeams(c)">队伍 / 加入</el-button>
+          </div>
+        </div>
       </el-col>
     </el-row>
+    <el-empty v-if="!list.length" description="暂无竞赛" style="margin-top: 40px" />
 
-    <el-dialog v-model="showTeamsDlg" :title="current?.name + ' - 队伍'" width="600px">
-      <el-table :data="teams" border size="small">
+    <el-dialog v-model="showTeamsDlg" :title="current?.name + ' - 队伍'" width="620px">
+      <el-table :data="teams" border size="small" style="border-radius: 10px">
         <el-table-column prop="name" label="队伍" />
-        <el-table-column prop="memberCount" label="人数" width="70" />
-        <el-table-column label="操作" width="140">
+        <el-table-column prop="memberCount" label="人数" width="80" />
+        <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" type="success" @click="join(row.id)" :disabled="row.status === 'FULL'">
+            <el-button size="small" type="success" round @click="join(row.id)" :disabled="row.status === 'FULL'">
               {{ row.status === 'FULL' ? '已满' : '加入' }}
             </el-button>
           </template>
         </el-table-column>
       </el-table>
-      <div style="margin-top: 12px; display: flex; gap: 10px">
-        <el-input v-model="teamName" placeholder="新队伍名称" style="width: 200px" />
+      <div style="margin-top: 14px; display: flex; gap: 10px">
+        <el-input v-model="teamName" placeholder="新队伍名称" style="width: 220px" />
         <el-button type="primary" @click="handleCreateTeam">创建队伍</el-button>
       </div>
     </el-dialog>
@@ -52,12 +55,12 @@
         <el-form-item label="主办方"><el-input v-model="form.organizer" /></el-form-item>
         <el-form-item label="级别">
           <el-select v-model="form.level" style="width: 100%">
-            <el-option v-for="l in levels" :key="l" :label="l" :value="l" />
+            <el-option v-for="l in levels" :key="l" :label="levelText(l)" :value="l" />
           </el-select>
         </el-form-item>
-        <el-form-item label="报名截止"><el-date-picker v-model="form.registerDeadline" type="date" /></el-form-item>
-        <el-form-item label="开始日期"><el-date-picker v-model="form.startDate" type="date" /></el-form-item>
-        <el-form-item label="结束日期"><el-date-picker v-model="form.endDate" type="date" /></el-form-item>
+        <el-form-item label="报名截止"><el-date-picker v-model="form.registerDeadline" type="date" value-format="YYYY-MM-DD" /></el-form-item>
+        <el-form-item label="开始日期"><el-date-picker v-model="form.startDate" type="date" value-format="YYYY-MM-DD" /></el-form-item>
+        <el-form-item label="结束日期"><el-date-picker v-model="form.endDate" type="date" value-format="YYYY-MM-DD" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showCreate = false">取消</el-button>
@@ -82,6 +85,9 @@ const showTeamsDlg = ref(false)
 const current = ref(null)
 const teams = ref([])
 const teamName = ref('')
+
+const levelText = (l) => ({ SCHOOL: '校级', PROVINCE: '省级', NATIONAL: '国家级' }[l] || l)
+const levelBg = (l) => ({ SCHOOL: '#34C77B', PROVINCE: '#F5A623', NATIONAL: '#F56C6C' }[l] || '#A0A7C8')
 
 const load = async () => {
   const res = await getCompetitions({ page: 1, size: 12, keyword: keyword.value, level: level.value })
@@ -114,9 +120,27 @@ onMounted(load)
 </script>
 
 <style scoped>
-.toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
-.desc { color: #606266; min-height: 40px; }
-.meta { color: #909399; font-size: 12px; }
-.card-head { display: flex; justify-content: space-between; align-items: center; }
-.actions { text-align: right; }
+.comp-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid #EEF1F9;
+}
+.comp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.comp-level {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+.comp-status { font-size: 12px; color: #A0A7C8; }
+.comp-name { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+.comp-desc { color: var(--text-sub); font-size: 13px; line-height: 1.5; min-height: 40px; margin-bottom: 10px; }
+.comp-meta { color: var(--text-sub); font-size: 12px; margin-bottom: 14px; }
+.meta-line { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.info-ic { font-style: normal; }
+.comp-actions { display: flex; gap: 8px; }
 </style>

@@ -1,32 +1,33 @@
 <template>
   <div>
+    <h2 class="page-title">二手闲置</h2>
     <div class="toolbar">
       <el-input v-model="keyword" placeholder="搜索商品" clearable style="width: 220px" @keyup.enter="load" />
       <el-select v-model="category" placeholder="分类" clearable style="width: 140px">
         <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
       </el-select>
       <el-button type="primary" @click="load">查询</el-button>
-      <el-button type="success" @click="showCreate = true">发布闲置</el-button>
+      <el-button type="success" @click="showCreate = true" style="margin-left: auto">＋ 发布闲置</el-button>
     </div>
 
-    <el-row :gutter="16">
+    <el-row :gutter="18">
       <el-col :span="8" v-for="item in list" :key="item.id">
-        <el-card shadow="hover" style="margin-bottom: 16px">
-          <template #header>
-            <div class="card-head">
-              <span>{{ item.title }}</span>
-              <el-tag size="small" :type="statusTag(item.status)">{{ item.status }}</el-tag>
-            </div>
-          </template>
-          <p class="price">¥ {{ item.price }}</p>
-          <p class="desc">{{ item.description }}</p>
-          <div class="actions">
-            <el-button size="small" type="primary" @click="reserve(item.id)" v-if="item.status === 'ON_SALE'">预约</el-button>
-            <el-button size="small" type="success" @click="sell(item.id)" v-if="item.status === 'RESERVED'">成交</el-button>
+        <div class="sh-card hover-card">
+          <div class="sh-head">
+            <span class="sh-cat">{{ item.category }}</span>
+            <span class="sh-status" :style="{ background: statusBg(item.status) }">{{ statusText(item.status) }}</span>
           </div>
-        </el-card>
+          <div class="sh-title">{{ item.title }}</div>
+          <div class="sh-desc">{{ item.description }}</div>
+          <div class="sh-price">¥ {{ item.price }}</div>
+          <div class="sh-actions">
+            <el-button size="small" type="primary" round @click="reserve(item.id)" v-if="item.status === 'ON_SALE'">预约购买</el-button>
+            <el-button size="small" type="success" round @click="sell(item.id)" v-if="item.status === 'RESERVED'">确认成交</el-button>
+          </div>
+        </div>
       </el-col>
     </el-row>
+    <el-empty v-if="!list.length" description="暂无闲置商品" style="margin-top: 40px" />
 
     <el-dialog v-model="showCreate" title="发布闲置" width="500px">
       <el-form :model="form" label-width="80px">
@@ -59,11 +60,19 @@ const categories = ['教材', '电子产品', '生活用品', '其他']
 const showCreate = ref(false)
 const form = ref({})
 
+const statusMap = {
+  ON_SALE: { text: '在售', bg: '#34C77B' },
+  RESERVED: { text: '已预约', bg: '#F5A623' },
+  SOLD: { text: '已售出', bg: '#A0A7C8' },
+  OFF_SHELF: { text: '已下架', bg: '#F56C6C' }
+}
+const statusText = (s) => statusMap[s]?.text || s
+const statusBg = (s) => statusMap[s]?.bg || '#A0A7C8'
+
 const load = async () => {
   const res = await getItems({ page: 1, size: 12, keyword: keyword.value, category: category.value })
   list.value = res.data.records
 }
-const statusTag = (s) => ({ ON_SALE: 'success', RESERVED: 'warning', SOLD: 'info', OFF_SHELF: 'danger' }[s] || 'info')
 const reserve = async (id) => {
   await reserveItem(id)
   ElMessage.success('已预约，等待卖家确认成交')
@@ -84,9 +93,37 @@ onMounted(load)
 </script>
 
 <style scoped>
-.toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
-.price { color: #e6a23c; font-size: 18px; font-weight: bold; }
-.desc { color: #606266; min-height: 36px; }
-.card-head { display: flex; justify-content: space-between; align-items: center; }
-.actions { text-align: right; }
+.sh-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid #EEF1F9;
+}
+.sh-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.sh-cat {
+  background: #F0F4FF;
+  color: #5B7FFF;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+.sh-status {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.sh-title { font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+.sh-desc { color: var(--text-sub); font-size: 13px; line-height: 1.5; min-height: 40px; margin-bottom: 10px; }
+.sh-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: #F2703E;
+  margin-bottom: 12px;
+}
+.sh-actions { display: flex; gap: 8px; }
 </style>
