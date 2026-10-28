@@ -48,6 +48,8 @@ const handleLogin = () => {
       // 保存Token和用户信息
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('userInfo', JSON.stringify(res.data))
+      localStorage.setItem('username', res.data.username || res.data.user?.username || loginForm.value.username)
+      localStorage.setItem('role', res.data.role || res.data.user?.role || 'STUDENT')
       ElMessage.success('登录成功')
       router.push('/')
     } catch (error) {
