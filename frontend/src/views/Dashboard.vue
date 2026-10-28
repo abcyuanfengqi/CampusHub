@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getClubs } from '../api/club'
 import { getActivities } from '../api/activity'
@@ -98,10 +98,7 @@ onMounted(async () => {
     // 统计失败保持默认值
   }
 })
-const statCardsView = computedView()
-function computedView() {
-  return statCards.map(c => ({ ...c, value: stats.value[c.key] }))
-}
+const statCardsView = computed(() => statCards.map(c => ({ ...c, value: stats.value[c.key] })))
 </script>
 
 <style scoped>
